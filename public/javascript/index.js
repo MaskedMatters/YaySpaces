@@ -1,13 +1,10 @@
-function openCodeServer(port) {
-    window.location.href = `http://${window.location.hostname}:${port}`
-}
-
-function openVSCode(port) {
-    alert("No... not yet...")
-}
-
-function openTerminal() {
-    alert("Not yet either...")
+async function openCodeServer(port) {
+    try {
+        window.location.href = `http://${window.location.hostname}:${port}`;
+    } catch (error) {
+        console.error('Error opening code server:', error);
+        alert('Failed to open code server. Please check your browser settings or contact support.');
+    }
 }
 
 async function deleteCodespace(id) {
@@ -23,20 +20,21 @@ async function deleteCodespace(id) {
 
         if (data.success) {
             console.log('Workspace deleted:', data);
-            // You might want to refresh the page or add the new workspace to the UI
-            window.location.reload();  // Simple solution for now
+            alert('Workspace deleted successfully.');
+            window.location.reload();
         } else {
             console.error('Server failed to delete codespace:', data.message);
-            alert('Server failed to delete codespace. It is online and responsive, check Docker Daemon.');
+            alert('Failed to delete workspace. Please check the server logs for more details.');
         }
     } catch (error) {
         console.error('Error requesting server for codespace:', error);
-        alert('Error requesting server for codespace. Please check the server status.');
+        alert('Error communicating with the server. Please check your internet connection or server status.');
     }
 }
 
 async function createNewWorkspace() {
     try {
+        // Add loading indicator here
         const response = await fetch('/create', {
             method: 'POST',
             headers: {
@@ -46,16 +44,17 @@ async function createNewWorkspace() {
 
         const data = await response.json();
 
+        // Remove loading indicator here
         if (data.success) {
             console.log('Workspace created:', data);
-            // You might want to refresh the page or add the new workspace to the UI
-            window.location.reload();  // Simple solution for now
+            alert('Workspace created successfully.');
+            window.location.reload();
         } else {
             console.error('Server failed to create codespace:', data.message);
-            alert('Server failed to create codespace. It is online and responsive, check Docker Daemon.');
+            alert('Failed to create workspace. Please check the server logs for more details.');
         }
     } catch (error) {
         console.error('Error requesting server for codespace:', error);
-        alert('Error requesting server for codespace. Please check the server status.');
+        alert('Error communicating with the server. Please check your internet connection or server status.');
     }
 }

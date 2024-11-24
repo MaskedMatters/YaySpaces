@@ -1,80 +1,56 @@
+// IMPORTS
 import express from 'express';
 import Docker from 'dockerode';
 
+// CONSTANTS
+const PORT = process.env.PORT || 3000;
+const DEFAULT_IMAGE = 'ubuntu:latest';
+const CODE_SERVER_PORT = '8080/tcp';
+
+// EXPRESS CONFIG
 const app = express();
-const docker = new Docker(); // Connects to default socket
-
-// Need this middleware to parse JSON body in POST requests
-app.use(express.json());
-
 app.set('view engine', 'ejs');
 app.use('/public', express.static('public'));
+app.use(express.json());
 
-const port = 3000;
+// DOCKER CONFIG
+const docker = new Docker();
 
-app.get('/', async (req, res) => {
+// UTILITY FUNCTIONS
+async function pullImage(imageName) {
+    console.log(`Pulling Docker Image: ${imageName}`);
+    
     try {
-        const containers = await docker.listContainers();
-
-        const codespaces = {};
-        for (const container of containers) {
-            const containerNames = container.Names; 
-            for (const name of containerNames) {
-                if (name.startsWith('/codespace-')) {
-                    // Get the container's port mapping
-                    const containerInfo = await docker.getContainer(container.Id).inspect();
-                    const port = containerInfo.NetworkSettings.Ports['8080/tcp'][0].HostPort;
-
-                    codespaces[name.substring(1)] = {
-                        id: container.Id,
-                        port: port
-                    };
-                }
-            }
-        }
-
-        res.render('pages/index', { codespaces: codespaces });
-
-    } catch (error) {
-        console.error('Error listing containers:', error);
-        res.status(500).render('pages/error', { error: 'Failed to list containers' }); 
-    }
-});
-
-app.post('/create', async (req, res) => {
-    try {
-        const imageName = 'ubuntu:latest';
-        
-        // Pull the Ubuntu image first
-        console.log('Currently pulling Ubuntu Docker image...');
-        await new Promise((resolve, reject) => {
+        return await new Promise((resolve, reject) => {
             docker.pull(imageName, (err, stream) => {
-                if (err) {
-                    reject(err);
-                    return;
-                }
+                if (err) return reject(err);
 
-                // Track pull progress
                 docker.modem.followProgress(stream, (err, output) => {
-                    if (err) {
-                        reject(err);
-                        return;
-                    }
+                    if (err) return reject(err);
+                    
+                    console.log(`Successfully Pulled Docker Image: ${imageName}`);
                     resolve(output);
                 });
             });
         });
-        
-        console.log('Successfully pulled Ubuntu Docker image...');
+    } catch (error) {
+        console.error(`Failed to pull image ${imageName}:`, error);
+        throw error;
+    }
+}
 
-        // Create a unique name for the container
-        const containerName = `codespace-${Date.now()}`;
-        console.log('Created codespace name...');
-        
-        // Create the 
-        console.log('Creating codespace container...')
+async function createCodespaceContainer(containerName, volumeName) {
+    try {
+        // Create volume first
+        const volume = await docker.createVolume({
+            Name: volumeName,
+            Labels: { createdAt: new Date().toISOString() }
+        });
+        console.log(`Created Docker Volume: ${volumeName}`);
+
+        // Create container with the volume
         const container = await docker.createContainer({
-            Image: 'ubuntu:latest',  // Base image
+            Image: DEFAULT_IMAGE,
             name: containerName,
             Cmd: ['/bin/bash', '-c', `
                 apt update && \
@@ -83,43 +59,159 @@ app.post('/create', async (req, res) => {
                 curl -fsSL https://code-server.dev/install.sh | sh && \
                 code-server --bind-addr 0.0.0.0:8080
             `],
-            ExposedPorts: {
-                '8080/tcp': {}  // code-server port
-            },
+            ExposedPorts: { [CODE_SERVER_PORT]: {} },
             HostConfig: {
-                PortBindings: {
-                    '8080/tcp': [{ HostPort: '' }]  // Randomly assigned port
-                }
+                PortBindings: { [CODE_SERVER_PORT]: [{ HostPort: '' }] },
+                Binds: [
+                    `${volumeName}:/home/coder/project`,
+                    `${volumeName}:/home/coder/.local/share/code-server`
+                ]
+            },
+            Labels: {
+                createdAt: new Date().toISOString(),
+                volumeName: volumeName
             }
         });
 
-        // Start the container
         await container.start();
-        console.log("Successfully created and started container...");
+        console.log(`Started Docker Container: ${containerName}`);
+        return container;
+    } catch (error) {
+        console.error('Error in createCodespaceContainer:', error);
+        throw error;
+    }
+}
 
-        // Get container information including port mapping
+async function getContainerPort(container) {
+    try {
         const containerInfo = await container.inspect();
-        const port = containerInfo.NetworkSettings.Ports['8080/tcp'][0].HostPort;
-        console.log(`Container started on port ${port}`)
+        return containerInfo.NetworkSettings.Ports[CODE_SERVER_PORT][0].HostPort;
+    } catch (error) {
+        console.error('Error getting container port:', error);
+        throw error;
+    }
+}
 
-        res.json({
-            success: true, 
-            message: 'Container created successfully'
+async function cleanupContainer(container, volumeName) {
+    try {
+        // Stop container
+        try {
+            await container.stop();
+            console.log(`Stopped Container: ${container.id}`);
+        } catch (error) {
+            if (error.statusCode !== 304) { // Ignore if already stopped
+                throw error;
+            }
+        }
+
+        // Remove container
+        await container.remove();
+        console.log(`Removed Container: ${container.id}`);
+
+        // Remove volume
+        if (volumeName) {
+            const volume = docker.getVolume(volumeName);
+            await volume.remove();
+            console.log(`Removed Volume: ${volumeName}`);
+        }
+    } catch (error) {
+        console.error('Error in cleanupContainer:', error);
+        throw error;
+    }
+}
+
+// ROUTE HANDLERS
+async function handleGetRoot(req, res) {
+    try {
+        const containers = await docker.listContainers({
+            all: true,
+            filters: { name: ['codespace-'] }
+        });
+
+        const codespaces = {};
+
+        await Promise.all(containers.map(async (container) => {
+            const containerObj = docker.getContainer(container.Id);
+            const containerInfo = await containerObj.inspect();
+            const port = containerInfo.NetworkSettings.Ports[CODE_SERVER_PORT]?.[0]?.HostPort;
+
+            codespaces[container.Names[0].replace('/', '')] = {
+                id: container.Id,
+                port: port,
+                state: container.State
+            };
+        }));
+
+        res.render('pages/index', { codespaces });
+    } catch (error) {
+        console.error('Error fetching codespaces:', error);
+        res.render('pages/index', { codespaces: {}, error: 'Failed to fetch codespaces' });
+    }
+}
+
+async function handleCreateCodespace(req, res) {
+    try {
+        const timestamp = Date.now();
+        const containerName = `codespace-${timestamp}`;
+        const volumeName = `codespace-volume-${timestamp}`;
+
+        await pullImage(DEFAULT_IMAGE);
+        const container = await createCodespaceContainer(containerName, volumeName);
+        await getContainerPort(container); // Ensure port is available
+
+        res.status(201).json({
+            success: true,
+            message: 'Container Started Successfully'
         });
     } catch (error) {
-        console.error('Error creating container:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to create container',
-            error: error.message 
+        console.error('Error Creating Container:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to Create Container',
+            error: error.message
         });
     }
+}
+
+async function handleDeleteCodespace(req, res) {
+    const { containerId } = req.params;
+    
+    try {
+        const container = docker.getContainer(containerId);
+        const containerInfo = await container.inspect();
+        const volumeName = containerInfo.Mounts?.[0]?.Name;
+
+        await cleanupContainer(container, volumeName);
+
+        res.status(200).json({
+            success: true,
+            message: 'Container Removed Successfully'
+        });
+    } catch (error) {
+        console.error('Error Deleting Container:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to Remove Container',
+            error: error.message
+        });
+    }
+}
+
+// ROUTES
+app.get('/', handleGetRoot);
+app.post('/create', handleCreateCodespace);
+app.delete('/delete/:containerId', handleDeleteCodespace);
+
+// ERROR HANDLING
+app.use((err, req, res, next) => {
+    console.error('Unhandled Error:', err);
+    res.status(500).json({
+        success: false,
+        message: 'Internal Server Error'
+    });
 });
 
-app.delete('/delete', (req, res) => {
-
-});
-
-app.listen(port, () => {
-    console.log(`The server has successfully started... please go to the local machines FQDN at port ${port}`)
+// START SERVER
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
 });

@@ -4,14 +4,26 @@ A lightweight self-hosted alternative to GitHub Codespaces that uses Docker on t
 ## Changelogs
 This is where I put the changelogs for every commit on GitHub (mostly). All changelogs that are old are below, scroll down.
 
-### Changelog (Add more touches | v0.0.2alpha-d)
+### Changelog (We have a winner, BETA RELEASE | v0.1.0beta-p)
+
+This is our first production release in BETA!! It's REALLY REALLY bad but it works and workspaces can be made. We completely redid the app.mjs file so it was cleaner and more readable for never nesters. I also made it so the index.ejs had buttons and things that worked and just yeah. Check it out by cloning the repository on your local machine and running `npm install` and `npm run start` and it should hopefully work for you too.
+
+**MAKE SURE YOU NEVER KEEP PRESSING THE DELETE BUTTON, IT WORKS SLOWLY!!**
+
+<details>
+<summary>Changelog (Completely redo everything, for simplicity... | v0.1.0alpha-d)</summary>
+In this change, I completely redid everything and restarted. I am starting with the app.mjs and I coded all of the endpoints (except the root for the web GUI) so it's cleaner and things are in functions and everything. There isn't much to say. I might move all of the functions into a different JavaScript file so I can just use app.mjs as a router of sorts.
+</details>
+
+<details>
+<summary>Changelog (Add more touches | v0.0.2alpha-d)</summary><br>
 
 Wow, things are happening really fast. In the JavaScript file for the index page, I actually made it so when you press the div, it opens up the code server on the correct port and everything. This will be changed because of the action buttons I added inside the div that will ACTUALLY do all the work. We also just edited the CSS a little bit so things make more sense, probably not fully furnished either.
 
 In the index file, I added all of the EJS logic as a loop to display all of the current workspaces running at this moment. In the actual server file, I added stuff to actually scan all containers to see if there are any running codespaces that need to be in the loopdiloop.
 
 That's about it.
-
+</details>
 <details>
 <summary>Changelog (First Commit | v0.0.1alpha-d)</summary><br>
 
