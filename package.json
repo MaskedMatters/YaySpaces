@@ -1,0 +1,28 @@
+{
+  "name": "yayspaces",
+  "version": "0.0.1",
+  "description": "A lightweight self-hosted alternative to GitHub Codespaces that uses Docker on the main system to create isolated code environments.",
+  "main": "app.mjs",
+  "scripts": {
+    "start": "node app.mjs",
+    "dev": "nodemon app.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MaskedMatters/YaySpaces.git"
+  },
+  "author": "Matthew West | MaskedMatters",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/MaskedMatters/YaySpaces/issues"
+  },
+  "homepage": "https://github.com/MaskedMatters/YaySpaces#readme",
+  "dependencies": {
+    "dockerode": "^4.0.2",
+    "ejs": "^3.1.10",
+    "express": "^4.21.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  }
+}

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <%- include('../partials/head') %>
+        <link rel="stylesheet" href="/public/stylesheets/index.css">
+    </head>
+    <body>
+
+        <header><%- include('../partials/header'); %></header>
+
+        <main>
+            <div class="workspace-container">
+                <div class="workspace-item" onclick="openWorkspace('workspace-id')">
+                    <p>This is a test item!</p>
+                </div>
+                <div class="workspace-item create-new" onclick="createNewWorkspace()">
+                    <p class="bold">CREATE NEW WORKSPACE +</p>
+                </div>
+            </div>
+        </main>
+
+        <footer><%- include('../partials/footer'); %></footer>
+        <script src="/public/javascript/index.js"></script>
+    </body>
+</html>
