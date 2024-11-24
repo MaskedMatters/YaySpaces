@@ -10,12 +10,22 @@
 
         <main>
             <div class="workspace-container">
-                <div class="workspace-item" onclick="openWorkspace('workspace-id')">
-                    <p>This is a test item!</p>
-                </div>
                 <div class="workspace-item create-new" onclick="createNewWorkspace()">
                     <p class="bold">CREATE NEW WORKSPACE +</p>
                 </div>
+                <% for (const [name, data] of Object.entries(codespaces)) { %>
+                    <div class="workspace-item">
+                        <h2>Codespace: <span class="ul"><%= name %></span></h2> 
+                        <p>Container ID: <%= data.id %></p> 
+                        <p>Code Server Port: <%= data.port %></p>
+                        <div class="actions">
+                            <button>Open via code-server</button>
+                            <button>Open via Visual Studio Code</button>
+                            <button>Open via Terminal</button>
+                            <button>Open via nothing... delete!</button>
+                        </div>
+                    </div>
+                <% } %>
             </div>
         </main>
 

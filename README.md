@@ -1,7 +1,19 @@
 # YaySpaces
 A lightweight self-hosted alternative to GitHub Codespaces that uses Docker on the main system to create isolated code environments.
 
-## Changelog (First Commit | v0.0.1alpha-d)
+## Changelogs
+This is where I put the changelogs for every commit on GitHub (mostly). All changelogs that are old are below, scroll down.
+
+### Changelog (Add more touches | v0.0.2alpha-d)
+
+Wow, things are happening really fast. In the JavaScript file for the index page, I actually made it so when you press the div, it opens up the code server on the correct port and everything. This will be changed because of the action buttons I added inside the div that will ACTUALLY do all the work. We also just edited the CSS a little bit so things make more sense, probably not fully furnished either.
+
+In the index file, I added all of the EJS logic as a loop to display all of the current workspaces running at this moment. In the actual server file, I added stuff to actually scan all containers to see if there are any running codespaces that need to be in the loopdiloop.
+
+That's about it.
+
+<details>
+<summary>Changelog (First Commit | v0.0.1alpha-d)</summary><br>
 
 We created the overall EJS Express directory tree and started work on server endpoints and Docker logic. In the app.mjs file we initiate an express web application and a new docker environment. We host the web GUI on the main root endpoint and we have a /create endpoint for the web GUI to call when the "CREATE NEW WORKSPACE +" button is clicked. To see the code more in detail, visit the app.mjs file
 
@@ -90,6 +102,7 @@ async function createNewWorkspace() {
 ```
 
 Isn't that soooo cool! It actually works to, once you press the button, a Docker container is instantiated, assigned a random port, and updates/upgrades/installs code-server. If you do sudo docker ps, you can see it.
+</details>
 
 ## Installation (Usage)
 

@@ -12,8 +12,33 @@ app.use('/public', express.static('public'));
 
 const port = 3000;
 
-app.get('/', (req, res) => {
-    res.render('pages/index')
+app.get('/', async (req, res) => {
+    try {
+        const containers = await docker.listContainers();
+
+        const codespaces = {};
+        for (const container of containers) {
+            const containerNames = container.Names; 
+            for (const name of containerNames) {
+                if (name.startsWith('/codespace-')) {
+                    // Get the container's port mapping
+                    const containerInfo = await docker.getContainer(container.Id).inspect();
+                    const port = containerInfo.NetworkSettings.Ports['8080/tcp'][0].HostPort;
+
+                    codespaces[name.substring(1)] = {
+                        id: container.Id,
+                        port: port
+                    };
+                }
+            }
+        }
+
+        res.render('pages/index', { codespaces: codespaces });
+
+    } catch (error) {
+        console.error('Error listing containers:', error);
+        res.status(500).render('pages/error', { error: 'Failed to list containers' }); 
+    }
 });
 
 app.post('/create', async (req, res) => {
@@ -79,10 +104,7 @@ app.post('/create', async (req, res) => {
 
         res.json({
             success: true, 
-            message: 'Container created successfully',
-            containerId: container.id,
-            name: containerName,
-            port: port
+            message: 'Container created successfully'
         });
     } catch (error) {
         console.error('Error creating container:', error);

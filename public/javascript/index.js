@@ -1,5 +1,6 @@
-function openWorkspace(workspaceId) {
-    console.log(`Opening workspace: ${workspaceId}`);
+function openWorkspace(port) {
+    console.log(`Opening workspace at port: ${port}`);
+    window.location.href = `http://${window.location.hostname}:${port}`
 }
 
 async function createNewWorkspace() {
