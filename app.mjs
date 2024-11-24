@@ -11,7 +11,6 @@ app.use(express.json())
 const docker = new Docker();
 
 const port = 3000;
-const persistent_storage = __dirname + '/code_volumes'
 
 // DOCKERODE FUNCTIONS & LOGIC
 async function pullImage(imageName) {
@@ -76,8 +75,34 @@ async function getContainerPort(container) {
 // ADD SERVER ENDPOINT STRUCTURE
 
 // Root endpoint
-app.get('/', (req, res) => {
+// ... (your existing code) ...
 
+// Root endpoint
+app.get('/', async (req, res) => {
+    res.render('pages/index', { codespaces: [], loading: true });
+
+    try {
+        const containers = await docker.listContainers({ all: true }); // Get all containers
+    
+        // Extract relevant information from the containers
+        const codespaces = containers
+            .filter(container => container.Names.some(name => name.startsWith('/codespace-'))) 
+            .map(container => ({
+                id: container.Id,
+                name: container.Names[0].substring(1), // Remove the leading '/'
+                port: container.Ports.find(port => port.PrivatePort === 8080)?.PublicPort || null 
+            }));
+    
+        res.render('pages/index', { codespaces, loading: false });
+    
+    } catch (error) {
+        console.error('Error fetching codespaces:', error);
+        res.status(500).render('pages/index', { 
+            codespaces: [], 
+            loading: false, 
+            error: 'Failed to fetch codespaces' 
+        });
+    }
 });
 
 // Create codespace endpoint
@@ -93,9 +118,9 @@ app.post('/create', async (req, res) => {
         await pullImage(imageName);
 
         const container = await createCodespaceContainer(containerName, volumeName);
-        const port = await getContainerPort(container);
+        const container_port = await getContainerPort(container);
 
-        console.log(`Container Started on Port: ${port}`);
+        console.log(`Container Started on Port: ${container_port}`);
 
         res.status(201).json({
             success: true,
@@ -115,8 +140,9 @@ app.post('/create', async (req, res) => {
 app.delete('/delete/:containerId', async (req, res) => {
     try {
         const containerId = req.params.containerId;
-
         const container = docker.getContainer(containerId);
+        
+        const volumeName = await container.inspect().Mounts[0].Name;
 
         try {
             await container.stop();
@@ -134,6 +160,15 @@ app.delete('/delete/:containerId', async (req, res) => {
             console.error(error);
         }
 
+        try {
+            const volume = docker.getVolume(volumeName);
+            await volume.remove();
+            console.log(`Removed Volume: ${volumeName}`);
+        } catch (error) {
+            console.error(`Error Removing Volume: ${volumeName}`);
+            console.error(error);
+        }
+
         res.status(202).json({
             success: true,
             message: 'Container Removed Successfully'
@@ -145,4 +180,8 @@ app.delete('/delete/:containerId', async (req, res) => {
             error: error.message
         });
     }
+});
+
+app.listen(port, () => {
+    console.log(`The server is currently running on port... ${port}`);
 });
