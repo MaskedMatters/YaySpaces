@@ -4,9 +4,16 @@ A lightweight self-hosted alternative to GitHub Codespaces that uses Docker on t
 ## Changelogs
 This is where I put the changelogs for every commit on GitHub (mostly). All changelogs that are old are below, scroll down.
 
-### Changelog (Completely redo everything, for simplicity... | v0.1.0alpha-d)
+### Changelog (We have a winner, BETA RELEASE | v0.1.0beta-p)
 
+This is our first production release in BETA!! It's REALLY REALLY bad but it works and workspaces can be made. We completely redid the app.mjs file so it was cleaner and more readable for never nesters. I also made it so the index.ejs had buttons and things that worked and just yeah. Check it out by cloning the repository on your local machine and running `npm install` and `npm run start` and it should hopefully work for you too.
+
+**MAKE SURE YOU NEVER KEEP PRESSING THE DELETE BUTTON, IT WORKS SLOWLY!!**
+
+<details>
+<summary>Changelog (Completely redo everything, for simplicity... | v0.1.0alpha-d)</summary>
 In this change, I completely redid everything and restarted. I am starting with the app.mjs and I coded all of the endpoints (except the root for the web GUI) so it's cleaner and things are in functions and everything. There isn't much to say. I might move all of the functions into a different JavaScript file so I can just use app.mjs as a router of sorts.
+</details>
 
 <details>
 <summary>Changelog (Add more touches | v0.0.2alpha-d)</summary><br>

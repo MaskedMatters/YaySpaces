@@ -11,29 +11,21 @@
         <main>
             <div class="workspace-container">
                 <div class="workspace-item create-new" onclick="createNewWorkspace()">
-                <p class="bold">CREATE NEW WORKSPACE +</p>
+                    <p class="bold">CREATE NEW WORKSPACE +</p>
                 </div>
-
-                <% if (loading) { %>
-                    <div class="loading">Loading codespaces...</div> 
-                <% } else if (codespaces.length === 0) { %>
-                    <div class="empty">No codespaces found. Create one to get started!</div>
-                <% } else { %> 
-                    <% for (const [name, data] of Object.entries(codespaces)) { %>
-                        <div class="workspace-item">
+                <% for (const [name, data] of Object.entries(codespaces)) { %>
+                    <div class="workspace-item">
                         <h2>Codespace: <span class="ul"><%= name %></span></h2> 
-                        <p>Container ID: <%= data.id %></p> 
+                        <p>Container ID: <%= data.id %></p>
                         <p>Code Server Port: <%= data.port %></p>
                         <div class="actions">
                             <button onclick="openCodeServer(<%= data.port %>)">Open via code-server</button>
                             <button disabled>Open via Visual Studio Code</button>
                             <button disabled>Open via Terminal</button>
-                            <button disabled>Open via nothing... delete!</button>
+                            <button onclick="deleteCodespace('<%= data.id %>')">Open via DELETE</button>
                         </div>
-                        </div>
-                    <% } %>
-                <% } %> 
-
+                    </div>
+                <% } %>
             </div>
         </main>
 
