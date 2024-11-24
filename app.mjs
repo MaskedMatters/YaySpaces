@@ -116,6 +116,10 @@ app.post('/create', async (req, res) => {
     }
 });
 
+app.delete('/delete', (req, res) => {
+
+});
+
 app.listen(port, () => {
     console.log(`The server has successfully started... please go to the local machines FQDN at port ${port}`)
 });

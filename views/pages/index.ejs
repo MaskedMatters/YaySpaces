@@ -19,10 +19,10 @@
                         <p>Container ID: <%= data.id %></p> 
                         <p>Code Server Port: <%= data.port %></p>
                         <div class="actions">
-                            <button>Open via code-server</button>
-                            <button>Open via Visual Studio Code</button>
-                            <button>Open via Terminal</button>
-                            <button>Open via nothing... delete!</button>
+                            <button onclick="openCodeServer(<%= data.port %>)">Open via code-server</button>
+                            <button onclick="openVSCode(<%= data.port %>)">Open via Visual Studio Code</button>
+                            <button onclick="openTerminal()">Open via Terminal</button>
+                            <button onclick="deleteCodespace(<%= data.id %>)">Open via nothing... delete!</button>
                         </div>
                     </div>
                 <% } %>
